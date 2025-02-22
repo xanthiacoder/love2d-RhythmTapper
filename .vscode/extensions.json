@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "editorconfig.editorconfig",
+    "slevesque.shader",
+    "sumneko.lua",
+    "sanjulaganepola.github-local-actions",
+    "tomblind.local-lua-debugger-vscode"
+  ]
+}
