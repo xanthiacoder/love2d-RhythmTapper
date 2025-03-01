@@ -1,12 +1,47 @@
 -- testing printing to debug console
-print("Started main loop...")
+-- print("Started main loop...")
 
 -- add files that are required here
 
 -- Add at top of file after require
-local message = "This is a test."
+local message = "Tap your beat (bpm) with SPACE BAR"
+local song = {
+  tempo = 120,
+}
+local clock = {
+  tick = 1,
+  tock = 1,
+  time = love.timer.getTime(),
+  lapTock = love.timer.getTime(),
+}
+
+local tapTempo = love.timer.getTime() -- init to detect delta to change tempo
+local tapAlpha = 1 -- alpha value of blinking light synced to tempo
+
+-- print("song.tempo = ".. song.tempo)
 
 function love.load()
+  -- load fonts
+  monoFont = love.graphics.newFont("assets/JetBrainsMonoNL-Regular.ttf", 13)
+  bigFont = love.graphics.newFont("assets/JetBrainsMonoNL-Regular.ttf", 26)
+  maxFont = love.graphics.newFont("assets/JetBrainsMonoNL-Regular.ttf", 13*4)
+end
+
+function love.keypressed(key)
+  if key == 'escape' then
+    love.event.quit()
+  elseif key == "space" then
+    -- print("keypressed - space")
+    -- tapTempo detection
+    if (love.timer.getTime() - tapTempo) > 2 then
+      -- new attempt to tap tempo detected, recalibrate
+      tapTempo = love.timer.getTime()
+    else
+      song.tempo = math.floor(60 / (love.timer.getTime() - tapTempo))
+      tapTempo = love.timer.getTime() -- init for the next detection
+    end
+    -- print("song.tempo = ".. song.tempo)
+  end
 end
 
 function love.draw()
@@ -14,37 +49,60 @@ function love.draw()
   local windowWidth = love.graphics.getWidth()
   local windowHeight = love.graphics.getHeight()
 
-  local font = love.graphics.getFont()
-
   -- Calculate center positions
   local centerY = windowHeight / 2
   love.graphics.setColor(1, 1, 1)  -- Reset color for other drawing
 
   -- Center the text on the screen
-  local textWidth = font:getWidth(message)
+  local textWidth = bigFont:getWidth(message)
   local centerX = (windowWidth / 2) - (textWidth / 2)
 
   -- Draw a red circle at the mouse's position
-  love.graphics.setColor(1, 0, 0)
-  love.graphics.circle("fill", x, y, 10)
+  -- love.graphics.setColor(1, 0, 0)
+  -- love.graphics.circle("fill", x, y, 10)
+
+  -- Draw a red circle that blinks according to tempo
+  love.graphics.setColor(1, 0, 0, tapAlpha)
+  love.graphics.circle("fill", 640/2, (480/2)+34, 80)
+  love.graphics.setColor(1, 1, 1)  -- Reset color for other drawing
 
   -- Draw the message in the center of the screen
   love.graphics.setColor(1, 1, 1)
+  love.graphics.setFont(bigFont)
   love.graphics.print(message, centerX, 32)
+  love.graphics.setFont(maxFont)
+  love.graphics.printf(song.tempo, 0, 240, 640, "center")
+
 end
 
 function love.update(dt)
   -- Gets the x- and y-position of the mouse.
   x, y = love.mouse.getPosition()
-end
 
-function love.keypressed(key)
-  if key == 'escape' then
-    love.event.quit()
+  -- fade blinking dot
+  tapAlpha = tapAlpha - 0.02
+
+  -- tempo stuff
+  -- get clock.tick and clock.tock to move according to tempo
+  clock.time = love.timer.getTime()
+	-- check ticks and tocks
+  if (clock.time - clock.lapTock) >= ((60 / song.tempo)/4) then
+    clock.tock = clock.tock + 1
+    clock.lapTock = clock.time -- update lap timer for next tock
+    if clock.tock == 5 then
+      clock.tick = clock.tick + 1
+      tapAlpha = 1 -- reset blinking dot
+      if clock.tick == 5 then
+        clock.tick = 1
+        -- print("tick")
+      end
+      clock.tock = 1
+      -- print("tock")
+    end
   end
 end
 
 -- Callback function triggered by the default love.run when the game is closed
 function love.quit() 
-	print("Thanks for playing. Please play again soon!")
+	-- print("Thanks for playing. Please play again soon!")
 end
