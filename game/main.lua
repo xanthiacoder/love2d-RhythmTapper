@@ -4,7 +4,7 @@
 -- add files that are required here
 
 -- Add at top of file after require
-local message = "Tap your beat (bpm) with SPACE BAR"
+local message = "Tap your beat (bpm) with SPACE BAR\nLeft & Right arrows to fine tune\nESC to quit"
 local song = {
   tempo = 120,
 }
@@ -25,6 +25,11 @@ function love.load()
   monoFont = love.graphics.newFont("assets/JetBrainsMonoNL-Regular.ttf", 13)
   bigFont = love.graphics.newFont("assets/JetBrainsMonoNL-Regular.ttf", 26)
   maxFont = love.graphics.newFont("assets/JetBrainsMonoNL-Regular.ttf", 13*4)
+
+  -- load audio files
+  sfx = {
+    metronome = love.audio.newSource("assets/metronome-low.ogg", "static"),
+  }
 end
 
 function love.keypressed(key)
@@ -41,6 +46,10 @@ function love.keypressed(key)
       tapTempo = love.timer.getTime() -- init for the next detection
     end
     -- print("song.tempo = ".. song.tempo)
+  elseif key == "left" then
+    song.tempo = song.tempo - 1
+  elseif key == "right" then
+    song.tempo = song.tempo + 1
   end
 end
 
@@ -52,10 +61,6 @@ function love.draw()
   -- Calculate center positions
   local centerY = windowHeight / 2
   love.graphics.setColor(1, 1, 1)  -- Reset color for other drawing
-
-  -- Center the text on the screen
-  local textWidth = bigFont:getWidth(message)
-  local centerX = (windowWidth / 2) - (textWidth / 2)
 
   -- Draw a red circle at the mouse's position
   -- love.graphics.setColor(1, 0, 0)
@@ -69,7 +74,7 @@ function love.draw()
   -- Draw the message in the center of the screen
   love.graphics.setColor(1, 1, 1)
   love.graphics.setFont(bigFont)
-  love.graphics.print(message, centerX, 32)
+  love.graphics.printf(message, 0, 5, 640, "center")
   love.graphics.setFont(maxFont)
   love.graphics.printf(song.tempo, 0, 240, 640, "center")
 
@@ -92,6 +97,9 @@ function love.update(dt)
     if clock.tock == 5 then
       clock.tick = clock.tick + 1
       tapAlpha = 1 -- reset blinking dot
+      -- play metronome
+      sfx.metronome:stop()
+      sfx.metronome:play()
       if clock.tick == 5 then
         clock.tick = 1
         -- print("tick")
